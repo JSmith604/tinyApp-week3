@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/JSmith604/tinyApp-week3/issues"
   },
-  "homepage": "https://github.com/JSmith604/tinyApp-week3#readme"
+  "homepage": "https://github.com/JSmith604/tinyApp-week3#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
