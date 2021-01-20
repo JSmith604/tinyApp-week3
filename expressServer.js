@@ -2,7 +2,11 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
+
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
+
 
 app.set("view engine", "ejs");
 
@@ -19,9 +23,15 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-
+//Is the route below necessary?
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+app.get('/login', (req, res) => {
+  const username = name.username;
+  res.cookie();
+  res.redirect("/login");
 });
 
 
@@ -54,6 +64,13 @@ app.post("/urls", (req, res) => {
  urlDatabase[shortURL] = longURL;
  res.redirect(`/urls/${shortURL}`) 
 });
+
+app.post('/login', (req, res) => {
+  res.cookie();	  console.log("hello");
+  res.redirect("/login");	  console.log(req.body);
+  const username = req.body.username;
+  res.cookie('username', username);
+  res.redirect("/urls");
 
 app.post("/urls/:shortURL/delete", (req,res) => {
   const shortURL = req.params.shortURL;
