@@ -15,6 +15,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const userDatabase = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+
 const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
@@ -23,17 +36,17 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-app.get("/", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    username: req.cookies["username"]
+app.get('/register', (req, res) => {
+  const id = req.cookies['id'];
+  let userEmail;
+  if (id) {
+     userEmail = userDatabase[id]['email'];
   };
-  res.render("urls_index", templateVars);
-});
+  const templateVars = { 
+    userEmail
+  };
 
-//Is the route below necessary?
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  res.render('register', templateVars);
 });
 
 app.get('/login', (req, res) => {
@@ -42,21 +55,39 @@ app.get('/login', (req, res) => {
   res.redirect("/login");
 });
 
+app.get("/", (req, res) => {
+  res.redirect('/urls');
+});
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
 app.get("/urls", (req, res) => {
+  const id = req.cookies['id'];
+  let userEmail;
+  if (id) {
+     userEmail = userDatabase[id]['email'];
+  };
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"]
+    userEmail,
   };
-  res.render("urlsIndex", templateVars);
+  res.render("urls_index", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
-  const templateVars = { shortURL, longURL,
-    username: req.cookies["username"]
+  const id = req.cookies['id'];
+  let userEmail;
+  if (id) {
+     userEmail = userDatabase[id]['email'];
   };
-  res.render("urlsShow", templateVars);
+  const templateVars = { shortURL, longURL,
+    userEmail
+  };
+  res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -66,18 +97,31 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { 
-  username: req.cookies["username"]}
+  const id = req.cookies['id'];
+  let userEmail;
+  if (id) {
+     userEmail = userDatabase[id]['email'];
+  };
+  const templateVars = {
+    userEmail,
+  };
   res.render("urls_new", templateVars)
 });
 
+app.post('/register', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
 
-app.post("/urls", (req, res) => {
- console.log(req.body);
- const shortURL = generateRandomString();
- const longURL = req.body.longURL;
- urlDatabase[shortURL] = longURL;
- res.redirect(`/urls/${shortURL}`) 
+  const id = generateRandomString();
+  const user = {
+    id,
+    email,
+    password
+  }
+  userDatabase[id] = user;
+  res.cookie("id", id);
+  console.log(user);
+  res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
@@ -86,12 +130,21 @@ app.post('/login', (req, res) => {
   const username = req.body.username;
   res.cookie('username', username);
   res.redirect("/urls");
+});
 
-app.post("/urls/:shortURL/delete", (req,res) => {
+app.post("/urls", (req, res) => {
+  console.log(req.body);
+  const shortURL = generateRandomString();
+  const longURL = req.body.longURL;
+  urlDatabase[shortURL] = longURL;
+  res.redirect(`/urls/${shortURL}`) 
+ });
+
+app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
-  delete urlDatabase[shortURL];
-  res.redirect("/urls")
+  const longURL = req.body.longURL;
+  urlDatabase[shortURL] = longURL;
+  res.redirect("/urls/:shortURL")
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
@@ -101,16 +154,21 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect("/urls/:shortURL")
 });
 
-app.post("/urls/:shortURL", (req, res) => {
+app.post("/urls/:shortURL/delete", (req,res) => {
   const shortURL = req.params.shortURL;
-  const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect("/urls/:shortURL")
+  const longURL = urlDatabase[shortURL];
+  delete urlDatabase[shortURL];
+  res.redirect("/urls")
 });
 
+app.post("/logout", (req, res) => {
+  res.clearCookie("id");
+  res.redirect("/urls")
+  });
 
 
 
 
-//To use nodemon: type npm start or ./node_modules/.bin/nodemon -L expressServer.js 
-//website http://localhost:8080/urls
+
+
+
