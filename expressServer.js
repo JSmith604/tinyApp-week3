@@ -32,6 +32,17 @@ const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
 
+const emailLookup = (email) => {
+  for (let userID in userDatabase) {
+    let userObject = userDatabase[userID];
+    console.log(userObject);
+    if (userObject.email === email) {
+      return userObject;
+    }
+  } 
+  return null;
+};
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -49,11 +60,6 @@ app.get('/register', (req, res) => {
   res.render('register', templateVars);
 });
 
-app.get('/login', (req, res) => {
-  const username = name.username;
-  res.cookie();
-  res.redirect("/login");
-});
 
 app.get("/", (req, res) => {
   res.redirect('/urls');
@@ -111,7 +117,11 @@ app.get("/urls/new", (req, res) => {
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
+  if(email === "" || password === "") {
+    return res.status(400).send('Invalid email or password');
+  } else if (emailLookup(email)) {
+    return res.status(400).send('An account with this email address already exits');
+  } 
   const id = generateRandomString();
   const user = {
     id,
