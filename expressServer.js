@@ -66,6 +66,15 @@ const templateWithEmail = (req) => {
   return templateVars;
 };
 
+const urlsForUser = (userID) => {
+  let userUrlsObject = {};
+  for (let shortURL in urlDatabase) {
+    if(userID === urlDatabase[shortURL].userID) {
+      userUrlsObject[shortURL] = urlDatabase[shortURL];
+    }
+  }
+};
+
 app.get('/register', (req, res) => {
   let templateVars = templateWithEmail(req);
   res.render('register', templateVars);
