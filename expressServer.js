@@ -73,6 +73,7 @@ const urlsForUser = (userID) => {
       userUrlsObject[shortURL] = urlDatabase[shortURL];
     }
   }
+  return userUrlsObject;
 };
 
 app.get('/register', (req, res) => {
@@ -94,15 +95,8 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const id = req.cookies['id'];
-  let userEmail;
-  if (id) {
-     userEmail = userDatabase[id]['email'];
-  };
-  const templateVars = {
-    urls: urlDatabase,
-    userEmail,
-  };
+  let templateVars = templateWithEmail(req);
+  templateVars['urls'] = urlsForUser(req.cookies['user_id']);
   res.render("urlsIndex", templateVars);
 });
 
