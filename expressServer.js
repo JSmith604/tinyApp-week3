@@ -183,14 +183,22 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/edit", (req, res) => {
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect("/urls/:shortURL")
+  if(userID === urlDatabase[shortURL].userID){
+    delete urlDatabase[shortURL];
+    res.redirect("/urls/:shortURL") 
+  } else {
+    res.status(403).send('Invalid user id, cannot edit')
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req,res) => {
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect("/urls")
+  if(userID === urlDatabase[shortURL].userID){
+    delete urlDatabase[shortURL]; 
+    res.redirect("/urls")
+  } else {
+    res.status(403).send('Invalid user id, cannot delete')
+  }
 });
 
 app.post("/logout", (req, res) => {
