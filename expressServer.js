@@ -16,8 +16,8 @@ app.listen(PORT, () => {
 });
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const userDatabase = { 
@@ -30,6 +30,11 @@ const userDatabase = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
+  },
+  "user3randomID": {
+    id: "user3RandomID",
+    email: "birdsarecool@hotmail.com",
+    password: "parrots"
   }
 };
 
@@ -62,15 +67,7 @@ const templateWithEmail = (req) => {
 };
 
 app.get('/register', (req, res) => {
-  const id = req.cookies['id'];
-  let userEmail;
-  if (id) {
-     userEmail = userDatabase[id]['email'];
-  };
-  const templateVars = { 
-    userEmail
-  };
-
+  let templateVars = templateWithEmail(req);
   res.render('register', templateVars);
 });
 
@@ -101,35 +98,27 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
-  const id = req.cookies['id'];
-  let userEmail;
-  if (id) {
-     userEmail = userDatabase[id]['email'];
-  };
-  const templateVars = { shortURL, longURL,
-    userEmail
-  };
+  let templateVars = templateWithEmail(req);
+  templateVars['shortURL'] = req.params.shortURL
+  console.log(urlDatabase, req.params.shortURL);
+  templateVars['longURL'] = urlDatabase[req.params.shortURL]["longURL"];
+
   res.render("urlsShow", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
+  const longURL = urlDatabase[shortURL]["longURL"];
   res.redirect(longURL);
 });
 
 app.get("/urls/new", (req, res) => {
-  const id = req.cookies['id'];
-  let userEmail;
-  if (id) {
-     userEmail = userDatabase[id]['email'];
-  };
-  const templateVars = {
-    userEmail,
-  };
-  res.render("urls_new", templateVars)
+  let templateVars = templateWithEmail(req);
+  if (!templateVars.userEmail) {
+    res.redirect('/login');
+  } else {
+    res.render("urlsNew", templateVars)
+  }
 });
 
 app.post('/register', (req, res) => {
@@ -154,7 +143,7 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
-  const password = req.body.email;
+  const password = req.body.password;
   let userObject = emailLookup(email);
     if (!userObject) {
       res.status(403).send('Email cannot be found');
@@ -168,30 +157,35 @@ app.post('/login', (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  const userID =  req.cookies['user_id'];
+  urlDatabase[shortURL] = {
+    userID,
+    longURL,
+  };
   res.redirect(`/urls/${shortURL}`) 
  });
 
 app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
+  const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect("/urls/:shortURL")
+  const userID =  req.cookies['user_id'];
+  urlDatabase[shortURL] = {
+    userID,
+    longURL,
+  };
+  res.redirect('/urls/' + shortURL);
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
   delete urlDatabase[shortURL];
   res.redirect("/urls/:shortURL")
 });
 
 app.post("/urls/:shortURL/delete", (req,res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
   delete urlDatabase[shortURL];
   res.redirect("/urls")
 });
