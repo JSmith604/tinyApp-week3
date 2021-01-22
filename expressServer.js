@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session')
 const bcrypt = require('bcrypt');
+const { getUserByEmail, urlsForUser, generateRandomString } = require('./helpers');
 
 const app = express();
 const PORT = 8080; 
@@ -40,43 +41,6 @@ const userDatabase = {
     email: "birdsarecool@hotmail.com",
     password: "parrots"
   }
-};
-
-const generateRandomString = () => {
-  return Math.random().toString(36).substr(2, 6);
-};
-
-const getUserByEmail = (email, database) => {
-  for (let userID in database) {
-    let userObject = database[userID];
-    if (userObject.email === email) {
-      return userObject;
-    }
-  } 
-  return undefined;
-};
-
-// const templateWithEmail = (req) => {
-//   const id = req.cookies['user_id'];
-//   let userEmail;
-//   if (id) {
-//      userEmail = userDatabase[id]['email'];
-//   };
-//   const templateVars = {
-    
-//     userEmail,
-//   }
-//   return templateVars;
-// };
-
-const urlsForUser = (userID, database) => {
-  let userUrlsObject = {};
-  for (let shortURL in database) {
-    if(userID === database[shortURL].userID) {
-      userUrlsObject[shortURL] = database[shortURL];
-    }
-  }
-  return userUrlsObject;
 };
 
 app.get('/register', (req, res) => {
