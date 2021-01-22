@@ -9,14 +9,14 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
 
-        <% if(!userEmail){ %>
+        <% if(!user){ %>
 
           <a class="nav-item nav-link" href= '/register'> Create An Account </a>
           <a class="nav-item nav-link"href= '/login'>Login</a>
 
         <% } else { %>  
           
-          <div class="nav-item"> Logged In As: <%= userEmail %>! </div>
+          <div class="nav-item"> Logged In As: <%= user.email %>! </div>
           <form method="POST" action="/logout">
           <button class="btn btn-primary" type="submit">Logout</button>
           </form>

@@ -24,7 +24,7 @@ const userDatabase = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "123"
   },
  "user2RandomID": {
     id: "user2RandomID", 
@@ -42,10 +42,10 @@ const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
 
-const emailLookup = (email) => {
+const getUserByEmail = (email) => {
   for (let userID in userDatabase) {
     let userObject = userDatabase[userID];
-    console.log(userObject);
+    // console.log(userObject);
     if (userObject.email === email) {
       return userObject;
     }
@@ -53,18 +53,18 @@ const emailLookup = (email) => {
   return null;
 };
 
-const templateWithEmail = (req) => {
-  const id = req.cookies['user_id'];
-  let userEmail;
-  if (id) {
-     userEmail = userDatabase[id]['email'];
-  };
-  const templateVars = {
+// const templateWithEmail = (req) => {
+//   const id = req.cookies['user_id'];
+//   let userEmail;
+//   if (id) {
+//      userEmail = userDatabase[id]['email'];
+//   };
+//   const templateVars = {
     
-    userEmail,
-  }
-  return templateVars;
-};
+//     userEmail,
+//   }
+//   return templateVars;
+// };
 
 const urlsForUser = (userID) => {
   let userUrlsObject = {};
@@ -76,87 +76,109 @@ const urlsForUser = (userID) => {
   return userUrlsObject;
 };
 
+// app.get('*',(req,res) => {
+//   res.redirect('/login');
+// });
+
 app.get('/register', (req, res) => {
-  let templateVars = templateWithEmail(req);
+  let templateVars = {user: null};
   res.render('register', templateVars);
 });
 
 app.get('/login', (req, res) => {
-  let templateVars = templateWithEmail(req);
-  res.render('login', templateVars)
+  console.log("happy");
+  let templateVars = {user: null}
+  res.render('login', templateVars);
 });
 
-app.get("/", (req, res) => {
-  res.redirect('/urls');
-});
+// app.get("/", (req, res) => {
+//   res.redirect('/urls');
+// });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = templateWithEmail(req);
-  templateVars['urls'] = urlsForUser(req.cookies['user_id']);
+  const id = req.cookies['user_id'];
+  const user = userDatabase[id];
+  if (!user) {
+    res.redirect('/login');
+  }
+
+  const urls = urlsForUser(id);
+  let templateVars = {urls, user}
+  console.log(templateVars);
   res.render("urlsIndex", templateVars);
 });
 
-app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = templateWithEmail(req);
-  templateVars['shortURL'] = req.params.shortURL
-  console.log(urlDatabase, req.params.shortURL);
-  templateVars['longURL'] = urlDatabase[req.params.shortURL]["longURL"];
+app.get("/urls/new", (req, res) => {
+  const id = req.cookies['user_id'];
+  const user = userDatabase[id];
 
+  let templateVars = {user};
+
+  res.render("urlsNew", templateVars)
+ 
+});
+
+app.get("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL
+  const urlObj = urlDatabase[shortURL];
+  const longURL = urlObj.longURL;
+  const id = req.cookies['user_id'];
+  const user = userDatabase[id];
+
+  let templateVars = {user, shortURL, longURL}
   res.render("urlsShow", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL]["longURL"];
+  const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
 });
 
-app.get("/urls/new", (req, res) => {
-  let templateVars = templateWithEmail(req);
-  if (!templateVars.userEmail) {
-    res.redirect('/login');
-  } else {
-    res.render("urlsNew", templateVars)
-  }
-});
+
 
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  if(email === "" || password === "") {
+  if(!email || !password ) {
     return res.status(400).send('Invalid email or password');
-  } else if (emailLookup(email)) {
+  } 
+  
+  if (getUserByEmail(email)) {
     return res.status(400).send('An account with this email address already exits');
   } 
+
   const id = generateRandomString();
-  const user = {
-    id,
-    email,
-    password
-  }
+  const user = {id, email, password};
   userDatabase[id] = user;
+
   res.cookie('user_id', id);
-  console.log(user);
+  // console.log(user);
   res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
+  console.log("login");
   const email = req.body.email;
   const password = req.body.password;
-  let userObject = emailLookup(email);
-    if (!userObject) {
-      res.status(403).send('Email cannot be found');
-    } else if (userObject.password !== password) {
+  console.error(email, password);
+
+  let user = getUserByEmail(email);
+  if (!user) {
+      return res.status(403).send('Email cannot be found');
+    } 
+
+  if (user.password !== password) {
       return res.status(403).send('Invalid email or password');
     }
-    if(userObject && userObject.password === password) {
-      res.cookie('user_id', userObject.id);
-      res.redirect("/urls");
-    }
+
+  res.cookie('user_id', user.id);
+  res.redirect("/urls");
+
 });
 
 app.post("/urls", (req, res) => {
@@ -171,7 +193,7 @@ app.post("/urls", (req, res) => {
  });
 
 app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = generateRandomString();
+  const shortURL = req.params.shortURL
   const longURL = req.body.longURL;
   const userID =  req.cookies['user_id'];
   urlDatabase[shortURL] = {
