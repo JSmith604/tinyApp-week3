@@ -64,11 +64,13 @@ app.get('/urls.json', (req, res) => {
 app.get('/urls', (req, res) => {
   const id = req.session.user_id;
   const user = userDatabase[id];
+
+  // if user tries to go to /urls without being logged in, boot them out
   if (!user) {
     res.redirect('/login');
   }
 
-  const urls = urlsForUser(id);
+  const urls = urlsForUser(id, urlDatabase);
   let templateVars = {urls, user}
   console.log(templateVars);
   res.render("urlsIndex", templateVars);
@@ -86,8 +88,8 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
-  const urlObj = urlDatabase[shortURL];
-  const longURL = urlObj.longURL;
+  const longURL = urlDatabase[shortURL].longURL;
+  const id = req.session.user_id;
   const user = userDatabase[id];
   if(!req.session.user_id){
     res.status(401).send('Please login or create an account.');
@@ -137,7 +139,7 @@ app.post('/login', (req, res) => {
     } else if (!bcrypt.compareSync(plainTextPassword, userObject.password)) {
       return res.status(403).send('Invalid email or password');
     }
-    if(userObject && bcrypt.compareSync(plainTextPassword, userObject.  password)) {
+    if(userObject && bcrypt.compareSync(plainTextPassword, userObject.password)) {
       req.session.user_id =  userObject.id;
       res.redirect('/urls');
   }
