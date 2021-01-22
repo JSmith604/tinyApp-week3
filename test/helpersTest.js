@@ -1,15 +1,15 @@
 const { assert } = require('chai');
-const { getUserByEmail, urlsForUser, generateRandomString } = require('../helpers');
+const { getUserByEmail, urlsForUser } = require('../helpers');
 
 const testUsers = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "123"
   },
   "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
 };
@@ -21,16 +21,16 @@ const testURLDatabase = {
 
 describe('getUserByEmail', () => {
   it('should return a user with valid email', () => {
-    const user = getUserByEmail("user@example.com", testUsers)
+    const user = getUserByEmail("user@example.com", testUsers);
     const expectedOutput = {
-      id: "userRandomID", 
-      email: "user@example.com", 
+      id: "userRandomID",
+      email: "user@example.com",
       password: "123"
-    }
+    };
     assert.deepEqual(user, expectedOutput);
   });
   it('should return undefined for a non-existent email', () => {
-    const user = getUserByEmail("ilikebirds@parrot.com", testUsers)
+    const user = getUserByEmail("ilikebirds@parrot.com", testUsers);
     const expectedOutput = undefined;
     assert.strictEqual(user,expectedOutput);
   });
@@ -40,7 +40,7 @@ describe('urlsForUser', () => {
   it('it should return the urls for a user', () => {
     const urls = urlsForUser("userRandomID", testURLDatabase);
     const expectedOutput = {
-      b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" }}
+      b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" }};
     assert.deepEqual(urls, expectedOutput);
   });
   it('it should return an empty object if the url is not found', () => {
