@@ -1,5 +1,4 @@
 
-
 const getUserByEmail = (email, database) => {
   for (let userID in database) {
     let userObject = database[userID];
@@ -12,11 +11,9 @@ const getUserByEmail = (email, database) => {
 
 const urlsForUser = (userID, database) => {
   let userUrlsObject = {};
-  console.log("Entire database", database);
+  
 
   for (const [key, value] of Object.entries(database)) {
-    console.log("key inside of urlsForUser(): ", key);
-    console.log("value inside of urlsForUser():", value);
 
     if (userID === value["userID"]) {
       userUrlsObject[key] = {longURL: value["longURL"], userID: value["userID"]};
