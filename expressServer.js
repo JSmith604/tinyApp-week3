@@ -46,14 +46,14 @@ const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
 
-const getUserByEmail = (email) => {
-  for (let userID in userDatabase) {
-    let userObject = userDatabase[userID];
+const getUserByEmail = (email, database) => {
+  for (let userID in database) {
+    let userObject = database[userID];
     if (userObject.email === email) {
       return userObject;
     }
   } 
-  return null;
+  return undefined;
 };
 
 // const templateWithEmail = (req) => {
@@ -69,11 +69,11 @@ const getUserByEmail = (email) => {
 //   return templateVars;
 // };
 
-const urlsForUser = (userID) => {
+const urlsForUser = (userID, database) => {
   let userUrlsObject = {};
-  for (let shortURL in urlDatabase) {
-    if(userID === urlDatabase[shortURL].userID) {
-      userUrlsObject[shortURL] = urlDatabase[shortURL];
+  for (let shortURL in database) {
+    if(userID === database[shortURL].userID) {
+      userUrlsObject[shortURL] = database[shortURL];
     }
   }
   return userUrlsObject;
