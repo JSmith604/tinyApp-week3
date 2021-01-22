@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -24,17 +25,17 @@ const userDatabase = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "123"
+    password: bcrypt.hashSync('123', 10)
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync('dishwasher-funk',10)
   },
   "user3randomID": {
     id: "user3RandomID",
     email: "birdsarecool@hotmail.com",
-    password: "parrots"
+    password: bcrypt.hashSync('parrots',10)
   }
 };
 
@@ -76,9 +77,13 @@ const urlsForUser = (userID) => {
   return userUrlsObject;
 };
 
-// app.get('*',(req,res) => {
-//   res.redirect('/login');
-// });
+app.get('/', (req, res) => {
+  res.redirect('/urls');
+});
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
 
 app.get('/register', (req, res) => {
   let templateVars = {user: null};
@@ -86,20 +91,11 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  console.log("happy");
   let templateVars = {user: null}
   res.render('login', templateVars);
 });
 
-// app.get("/", (req, res) => {
-//   res.redirect('/urls');
-// });
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/urls", (req, res) => {
+app.get('/urls', (req, res) => {
   const id = req.cookies['user_id'];
   const user = userDatabase[id];
   if (!user) {
@@ -143,42 +139,36 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post('/register', (req, res) => {
   const email = req.body.email;
-  const password = req.body.password;
-  if(!email || !password ) {
+  const plainTextPassword = req.body.password;
+  const password = bcrypt.hashSync(plainTextPassword, 10);
+  if(email === "" || plainTextPassword === "") {
     return res.status(400).send('Invalid email or password');
   } 
-  
-  if (getUserByEmail(email)) {
+  else if (getUserByEmail (email, userDatabase)) {
     return res.status(400).send('An account with this email address already exits');
   } 
-
   const id = generateRandomString();
   const user = {id, email, password};
   userDatabase[id] = user;
 
   res.cookie('user_id', id);
-  // console.log(user);
   res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
-  console.log("login");
   const email = req.body.email;
-  const password = req.body.password;
-  console.error(email, password);
-
-  let user = getUserByEmail(email);
-  if (!user) {
+  const plainTextPassword = req.body.password;
+  let userObject = getUserByEmail(email, userDatabase);
+    if (!userObject) {
       return res.status(403).send('Email cannot be found');
     } 
-
-  if (user.password !== password) {
+    if (!bcrypt.compareSync(plainTextPassword, userObject.password)) {
       return res.status(403).send('Invalid email or password');
     }
-
-  res.cookie('user_id', user.id);
-  res.redirect("/urls");
-
+    if (userObject && bcrypt.compareSync(plainTextPassword, userObject.password)) {
+    res.cookie('user_id', user.id);
+    res.redirect("/urls");
+  }
 });
 
 app.post("/urls", (req, res) => {
