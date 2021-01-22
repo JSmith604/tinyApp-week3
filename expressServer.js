@@ -1,21 +1,29 @@
+//Dependencies 
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const app = express();
+
+//Helper Functions
 const { getUserByEmail, urlsForUser, generateRandomString } = require('./helpers');
 
-const app = express();
+//Local Host
 const PORT = 8080;
 
 app.use(bodyParser.urlencoded({extended: true}));
+
+//Encrypted Cookies
 app.use(cookieSession({
   name: 'session',
   keys: ['user_id'],
   maxAge: 24 * 60 * 60 * 100
 }));
 
+//View Engine
 app.set("view engine", "ejs");
 
+//Server Listening
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -43,11 +51,13 @@ const userDatabase = {
   }
 };
 
+//User Registration
 app.get('/register', (req, res) => {
   let templateVars = {user: null};
   res.render('register', templateVars);
 });
 
+//Login Page
 app.get('/login', (req, res) => {
   let templateVars = {user: null};
   res.render('login', templateVars);
@@ -61,11 +71,12 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
+//Make Sure User Is Logged In
 app.get('/urls', (req, res) => {
   const id = req.session.user_id;
   const user = userDatabase[id];
 
-  // if user tries to go to /urls without being logged in, boot them out
+
   if (!user) {
     res.redirect('/login');
   }
@@ -76,6 +87,7 @@ app.get('/urls', (req, res) => {
   res.render("urlsIndex", templateVars);
 });
 
+//Get New Urls
 app.get("/urls/new", (req, res) => {
   const id = req.session.user_id;
   const user = userDatabase[id];
@@ -86,6 +98,7 @@ app.get("/urls/new", (req, res) => {
  
 });
 
+//Make Sure User Exits/ Is Logged In 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
@@ -101,15 +114,14 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
+//Redirect To Long Url 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  console.log("Short url on app get route", shortURL);
   const longURL = urlDatabase[shortURL].longURL;
-  console.log("Long url on app get route", longURL);
   res.redirect(longURL);
 });
 
-
+//Create New User With Secure Password
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const plainTextPassword = req.body.password;
@@ -128,6 +140,7 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
+//Permissions For Login
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const plainTextPassword = req.body.password;
@@ -143,6 +156,7 @@ app.post('/login', (req, res) => {
   }
 });
 
+//Create Short Url
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
@@ -154,6 +168,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+//Navigate To Short Url
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
@@ -165,6 +180,7 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect('/urls/' + shortURL);
 });
 
+//Edit Urls
 app.post("/urls/:shortURL/edit", (req, res) => {
   const shortURL = req.params.shortURL;
   if (req.session.user_id === urlDatabase[shortURL].userID) {
@@ -175,6 +191,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   }
 });
 
+//Delete Urls
 app.post("/urls/:shortURL/delete", (req,res) => {
   const shortURL = req.params.shortURL;
   if (req.session.user_id === urlDatabase[shortURL].userID) {
@@ -185,6 +202,7 @@ app.post("/urls/:shortURL/delete", (req,res) => {
   }
 });
 
+//Logout of Tiny App 
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
