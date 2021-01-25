@@ -64,6 +64,11 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  const id = req.session.user_id;
+  const user = userDatabase[id];
+  if (!user) {
+    res.redirect('/login');
+  }
   res.redirect('/urls');
 });
 
@@ -87,15 +92,16 @@ app.get('/urls', (req, res) => {
   res.render("urlsIndex", templateVars);
 });
 
-//Get New Urls
+//Get New Urls Or Redirect To Login
 app.get("/urls/new", (req, res) => {
   const id = req.session.user_id;
   const user = userDatabase[id];
-
   let templateVars = {user};
-
-  res.render("urlsNew", templateVars);
- 
+  if (!user) {
+    res.redirect('/login');
+  } else {
+    res.render("urlsNew", templateVars);
+  }
 });
 
 //Make Sure User Exits/ Is Logged In 
