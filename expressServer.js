@@ -80,16 +80,13 @@ app.get('/urls.json', (req, res) => {
 app.get('/urls', (req, res) => {
   const id = req.session.user_id;
   const user = userDatabase[id];
-
-
   if (!user) {
     res.redirect('/login');
+  } else {
+    const urls = urlsForUser(id, urlDatabase);
+    let templateVars = {urls, user};
+    res.render("urlsIndex", templateVars);
   }
-
-  const urls = urlsForUser(id, urlDatabase);
-  let templateVars = {urls, user};
-  console.log(templateVars);
-  res.render("urlsIndex", templateVars);
 });
 
 //Get New Urls Or Redirect To Login
@@ -141,8 +138,7 @@ app.post('/register', (req, res) => {
   const id = generateRandomString();
   const user = {id, email, password};
   userDatabase[id] = user;
-
-  res.cookie('user_id', id);
+  req.session.user_id = id
   res.redirect('/urls');
 });
 
@@ -213,10 +209,3 @@ app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
 });
-
-
-
-
-
-
-
